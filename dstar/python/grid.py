@@ -26,6 +26,35 @@ class OccupancyGridMap:
 
         # the obstacle map
         self.occupancy_grid_map = np.zeros(self.map_extents, dtype=np.uint8)
+        y = 5
+        while y < 15:
+            self.set_obstacle((10, y))
+            y = y+1
+
+        y = 15
+        while y < 35:
+            self.set_obstacle((25, y))
+            y = y+1
+
+        y = 35
+        while y < 65:
+            self.set_obstacle((40, y))
+            y = y + 1
+
+        y = 20
+        while y < 40:
+            self.set_obstacle((55, y))
+            y = y+1
+
+        x = 25
+        while x < 45:
+            self.set_obstacle((x, 20))
+            x = x+1
+
+        x = 45
+        while x < 65:
+            self.set_obstacle((x, 60))
+            x = x+1
 
         # obstacles
         self.visited = {}

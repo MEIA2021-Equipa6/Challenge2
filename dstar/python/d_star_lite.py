@@ -122,7 +122,6 @@ class DStarLite:
                     min_s = temp
                     arg_min = s_
 
-            ### algorithm sometimes gets stuck here for some reason !!! FIX
             self.s_start = arg_min
             path.append(self.s_start)
             # scan graph for changed costs
@@ -154,5 +153,4 @@ class DStarLite:
                                 self.rhs[u] = min_s
                             self.update_vertex(u)
             self.compute_shortest_path()
-        print("path found!")
         return path, self.g, self.rhs
