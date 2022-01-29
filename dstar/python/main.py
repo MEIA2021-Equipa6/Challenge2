@@ -21,8 +21,6 @@ if __name__ == '__main__':
     x_dim = 100
     y_dim = 80
     start = (randrange(x_dim), randrange(y_dim))
-    while start is not UNOCCUPIED:
-        start = (randrange(x_dim), randrange(y_dim))
     goal = (randrange(x_dim), randrange(y_dim))
     start1 = (randrange(x_dim), randrange(y_dim))
     goal1 = (randrange(x_dim), randrange(y_dim))

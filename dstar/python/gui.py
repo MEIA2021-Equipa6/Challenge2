@@ -85,6 +85,9 @@ class Animation:
         # used to manage how fast the screen updates
         self.clock = pygame.time.Clock()
 
+    def set_done(self):
+      self.done = True
+
     def get_position(self):
         return self.current
 
