@@ -8,7 +8,8 @@ from typing import List
 BLACK = (0, 0, 0)  # BLACK
 UNOCCUPIED = (255, 255, 255)  # WHITE
 GOAL = (0, 255, 0)  # GREEN
-START = (255, 0, 0)  # RED
+PATH = (255, 0, 0)  # RED
+PATH1 = (255, 0, 255)  # RED
 ROBOT = (0, 0, 0)  # BLACK
 ROBOT2 = (255, 255, 255)  # WHITE
 GRAY1 = (145, 145, 102)  # GRAY1
@@ -132,7 +133,7 @@ class Animation:
                                round(step[0] * (self.height + self.margin) + self.height / 2) + self.margin]
 
                 # draw robot position as red circle
-                pygame.draw.circle(self.screen, START, step_center, round(self.width / 2) - 2)
+                pygame.draw.circle(self.screen, PATH, step_center, round(self.width / 2) - 2)
 
         if path1 is not None:
             for step in path1:
@@ -141,7 +142,7 @@ class Animation:
                                 round(step[0] * (self.height + self.margin) + self.height / 2) + self.margin]
 
                 # draw robot position as red circle
-                pygame.draw.circle(self.screen, START, step_center1, round(self.width / 2) - 2)
+                pygame.draw.circle(self.screen, PATH1, step_center1, round(self.width / 2) - 2)
 
     def display_obs(self, observations=None):
         if observations is not None:
@@ -261,6 +262,7 @@ class Animation:
         self.clock.tick(20)
 
         while True:
+            # time.sleep(0.1)
             if path and path1:
                 if len(path) > 1:
                     (x, y) = path[1]
@@ -268,6 +270,7 @@ class Animation:
                 if len(path1) > 1:
                     (x1, y1) = path1[1]
                     self.set_position1((x1, y1))
+            # time.sleep(0.1)
             break
 
         # go ahead and update screen with that we've drawn

@@ -34,6 +34,12 @@ if __name__ == '__main__':
     goal = (98, 78)
     start1 = (98, 0)
     goal1 = (1, 78)
+    
+    Side by side path correction
+    start = (2, 1)
+    goal = (99, 1)
+    start1 = (99, 2)
+    goal1 = (1, 2)
     """""
 
     gui = Animation(title="D* Lite Path Planning",
