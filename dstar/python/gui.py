@@ -9,16 +9,20 @@ BLACK = (0, 0, 0)  # BLACK
 UNOCCUPIED = (255, 255, 255)  # WHITE
 GOAL = (0, 255, 0)  # GREEN
 START = (255, 0, 0)  # RED
-ROBOT = (0, 0, 255)  # CYAN
+ROBOT = (0, 0, 0)  # BLACK
+ROBOT2 = (255, 255, 255)  # WHITE
 GRAY1 = (145, 145, 102)  # GRAY1
 OBSTACLE = (77, 77, 51)  # GRAY2
 LOCAL_GRID = (0, 0, 80)  # BLUE
-starttime = time.time()
+BUFFERZONE = (255, 128, 0)  # ORANGE
+BUFFERZONE1 = (255, 128, 0)  # ORANGE
 
 colors = {
     0: UNOCCUPIED,
     1: GOAL,
     2: ROBOT,
+    128: BUFFERZONE,
+    129: BUFFERZONE1,
     255: OBSTACLE
 }
 
@@ -48,6 +52,8 @@ class Animation:
         self.current1 = start1
         self.observation = {"pos": None, "type": None}
         self.observation1 = {"pos": None, "type": None}
+        self.buffer = []
+        self.buffer1 = []
         self.goal = goal
         self.goal1 = goal1
         self.viewing_range = viewing_range
@@ -202,9 +208,41 @@ class Animation:
                          round(
                             self.current1[0] * (self.height + self.margin) + self.height / 2) + self.margin]
 
-        # draw robot position as red circle
+        if len(path) > 1:
+            if self.buffer is not None:
+                for x in self.buffer:
+                    self.world.remove_buffer(x)
+            # clears the previous list of buffer zone cells
+            self.buffer = []
+            for i in range(-2, 3):
+                for j in range(-2, 3):
+                    grid_cell = (path[1][0] + i, path[1][1] + j)
+                    if self.world.in_bounds(grid_cell):
+                        if self.world.is_unoccupied(grid_cell):
+                            self.world.set_buffer(grid_cell)
+                            self.buffer.append(grid_cell)
+                            self.observation1 = {"pos": grid_cell, "type": BUFFERZONE}
+
+        if len(path1) > 1:
+            if self.buffer1 is not None:
+                for x in self.buffer1:
+                    self.world.remove_buffer1(x)
+            # clears the previous list of buffer zone cells
+            self.buffer1 = []
+
+            # draw the buffer zone
+            for i in range(-2, 3):
+                for j in range(-2, 3):
+                    grid_cell = (path1[1][0] + i, path1[1][1] + j)
+                    if self.world.in_bounds(grid_cell):
+                        if self.world.is_unoccupied(grid_cell):
+                            self.world.set_buffer1(grid_cell)
+                            self.buffer1.append(grid_cell)
+                            self.observation = {"pos": grid_cell, "type": BUFFERZONE1}
+
+        # draw robot position as blue circle
         pygame.draw.circle(self.screen, ROBOT, robot_center, round(self.width / 2) - 2)
-        pygame.draw.circle(self.screen, ROBOT, robot_center1, round(self.width / 2) - 2)
+        pygame.draw.circle(self.screen, ROBOT2, robot_center1, round(self.width / 2) - 2)
 
         # draw robot local grid map (viewing range)
         pygame.draw.rect(self.screen, LOCAL_GRID,

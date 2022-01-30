@@ -4,6 +4,8 @@ from d_star_lite import DStarLite
 from grid import OccupancyGridMap, SLAM
 import time
 
+BUFFERZONE = 128
+BUFFERZONE1 = 129
 OBSTACLE = 255
 UNOCCUPIED = 0
 starttime = time.time()
@@ -24,7 +26,15 @@ if __name__ == '__main__':
     goal = (randrange(x_dim), randrange(y_dim))
     start1 = (randrange(x_dim), randrange(y_dim))
     goal1 = (randrange(x_dim), randrange(y_dim))
-    view_range = 7
+    view_range = 5
+
+    """"
+    Path with forced colision
+    start = (1, 1)
+    goal = (98, 78)
+    start1 = (98, 0)
+    goal1 = (1, 78)
+    """""
 
     gui = Animation(title="D* Lite Path Planning",
                     width=10,
@@ -60,9 +70,11 @@ if __name__ == '__main__':
 
     # SLAM to detect vertices
     slam = SLAM(map=new_map,
-                view_range=view_range)
+                view_range=view_range,
+                robot=1)
     slam1 = SLAM(map=new_map,
-                 view_range=view_range)
+                 view_range=view_range,
+                 robot=2)
 
     # move and compute path
     path, g, rhs = dstar.move_and_replan(robot_position=new_position)

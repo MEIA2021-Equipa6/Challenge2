@@ -126,7 +126,7 @@ class DStarLite:
             path.append(self.s_start)
             # scan graph for changed costs
             changed_edges_with_old_cost = self.rescan()
-            #print("len path: {}".format(len(path)))
+            # print("len path: {}".format(len(path)))
             # if any edge costs changed
             if changed_edges_with_old_cost:
                 self.k_m += heuristic(self.s_last, self.s_start)
