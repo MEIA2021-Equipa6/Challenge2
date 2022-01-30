@@ -2,6 +2,8 @@ import numpy as np
 from utils import get_movements_4n, get_movements_8n, heuristic, Vertices, Vertex
 from typing import Dict, List
 
+BUFFERZONE = 128
+BUFFERZONE1 = 129
 OBSTACLE = 255
 UNOCCUPIED = 0
 
@@ -26,6 +28,35 @@ class OccupancyGridMap:
 
         # the obstacle map
         self.occupancy_grid_map = np.zeros(self.map_extents, dtype=np.uint8)
+        y = 5
+        while y < 15:
+            self.set_obstacle((10, y))
+            y = y+1
+
+        y = 15
+        while y < 35:
+            self.set_obstacle((25, y))
+            y = y+1
+
+        y = 35
+        while y < 65:
+            self.set_obstacle((40, y))
+            y = y + 1
+
+        y = 20
+        while y < 40:
+            self.set_obstacle((55, y))
+            y = y+1
+
+        x = 25
+        while x < 45:
+            self.set_obstacle((x, 20))
+            x = x+1
+
+        x = 45
+        while x < 65:
+            self.set_obstacle((x, 60))
+            x = x+1
 
         # obstacles
         self.visited = {}
@@ -56,6 +87,32 @@ class OccupancyGridMap:
         #    raise IndexError("Map index out of bounds")
 
         return self.occupancy_grid_map[row][col] == UNOCCUPIED
+
+    def is_buffer(self, pos: (int, int)) -> bool:
+        """
+        :param pos: cell position we wish to check
+        :return: True if cell is occupied with obstacle, False else
+        """
+        (x, y) = (round(pos[0]), round(pos[1]))  # make sure pos is int
+        (row, col) = (x, y)
+
+        # if not self.in_bounds(cell=(x, y)):
+        #    raise IndexError("Map index out of bounds")
+
+        return self.occupancy_grid_map[row][col] == BUFFERZONE
+
+    def is_buffer1(self, pos: (int, int)) -> bool:
+        """
+        :param pos: cell position we wish to check
+        :return: True if cell is occupied with obstacle, False else
+        """
+        (x, y) = (round(pos[0]), round(pos[1]))  # make sure pos is int
+        (row, col) = (x, y)
+
+        # if not self.in_bounds(cell=(x, y)):
+        #    raise IndexError("Map index out of bounds")
+
+        return self.occupancy_grid_map[row][col] == BUFFERZONE1
 
     def in_bounds(self, cell: (int, int)) -> bool:
         """
@@ -114,6 +171,42 @@ class OccupancyGridMap:
         (row, col) = (x, y)
         self.occupancy_grid_map[row, col] = UNOCCUPIED
 
+    def set_buffer(self, pos: (int, int)):
+        """
+        :param pos: cell position we wish to set obstacle
+        :return: None
+        """
+        (x, y) = (round(pos[0]), round(pos[1]))  # make sure pos is int
+        (row, col) = (x, y)
+        self.occupancy_grid_map[row, col] = BUFFERZONE
+
+    def remove_buffer(self, pos: (int, int)):
+        """
+        :param pos: position of obstacle
+        :return: None
+        """
+        (x, y) = (round(pos[0]), round(pos[1]))  # make sure pos is int
+        (row, col) = (x, y)
+        self.occupancy_grid_map[row, col] = UNOCCUPIED
+
+    def set_buffer1(self, pos: (int, int)):
+        """
+        :param pos: cell position we wish to set obstacle
+        :return: None
+        """
+        (x, y) = (round(pos[0]), round(pos[1]))  # make sure pos is int
+        (row, col) = (x, y)
+        self.occupancy_grid_map[row, col] = BUFFERZONE1
+
+    def remove_buffer1(self, pos: (int, int)):
+        """
+        :param pos: position of obstacle
+        :return: None
+        """
+        (x, y) = (round(pos[0]), round(pos[1]))  # make sure pos is int
+        (row, col) = (x, y)
+        self.occupancy_grid_map[row, col] = UNOCCUPIED
+
     def local_observation(self, global_position: (int, int), view_range: int = 2) -> Dict:
         """
         :param global_position: position of robot in the global map frame
@@ -124,15 +217,27 @@ class OccupancyGridMap:
         nodes = [(x, y) for x in range(px - view_range, px + view_range + 1)
                  for y in range(py - view_range, py + view_range + 1)
                  if self.in_bounds((x, y))]
-        return {node: UNOCCUPIED if self.is_unoccupied(pos=node) else OBSTACLE for node in nodes}
+        return {node: UNOCCUPIED if self.is_unoccupied(pos=node) or self.is_buffer(pos=node) else OBSTACLE for node in nodes}
 
+    def local_observation1(self, global_position: (int, int), view_range: int = 2) -> Dict:
+        """
+        :param global_position: position of robot in the global map frame
+        :param view_range: how far ahead we should look
+        :return: dictionary of new observations
+        """
+        (px, py) = global_position
+        nodes = [(x, y) for x in range(px - view_range, px + view_range + 1)
+                 for y in range(py - view_range, py + view_range + 1)
+                 if self.in_bounds((x, y))]
+        return {node: UNOCCUPIED if self.is_unoccupied(pos=node) or self.is_buffer1(pos=node) else OBSTACLE for node in nodes}
 
 class SLAM:
-    def __init__(self, map: OccupancyGridMap, view_range: int):
+    def __init__(self, map: OccupancyGridMap, view_range: int, robot: int):
         self.ground_truth_map = map
         self.slam_map = OccupancyGridMap(x_dim=map.x_dim,
                                          y_dim=map.y_dim)
         self.view_range = view_range
+        self.robot = robot
 
     def set_ground_truth_map(self, gt_map: OccupancyGridMap):
         self.ground_truth_map = gt_map
@@ -152,8 +257,12 @@ class SLAM:
     def rescan(self, global_position: (int, int)):
 
         # rescan local area
-        local_observation = self.ground_truth_map.local_observation(global_position=global_position,
-                                                                    view_range=self.view_range)
+        if self.robot == 1:
+            local_observation = self.ground_truth_map.local_observation(global_position=global_position,
+                                                                        view_range=self.view_range)
+        elif self.robot == 2:
+            local_observation = self.ground_truth_map.local_observation1(global_position=global_position,
+                                                                         view_range=self.view_range)
 
         vertices = self.update_changed_edge_costs(local_grid=local_observation)
         return vertices, self.slam_map
