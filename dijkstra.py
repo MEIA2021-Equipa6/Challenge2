@@ -33,8 +33,12 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import pprint
+from maze_ui import MazeUI
 
 class Dijkstra():
+
+    def __init__(self):
+        self.mazeUI = MazeUI(x_spacing=0.13, y_spacing = 0.2, theta=0)
 
     def dijkstras(self, occupancy_map, x_spacing, y_spacing, start, goal, debug=False, visual=False):
         """
@@ -57,15 +61,7 @@ class Dijkstra():
 
         # Setup Map Visualizations:
         if visual == True:
-            viz_map=occupancy_map
-            fig = plt.figure(figsize=(12,12))
-            ax = fig.add_subplot(111)
-            ax.set_title('Occupancy Grid')
-            plt.xticks(visible=False)
-            plt.yticks(visible=False)
-            plt.imshow(viz_map, origin='upper', interpolation='none', clim=colormapval)
-            ax.set_aspect('equal')
-            plt.pause(2)
+            self.viz_map = self.mazeUI.create_initial_maze(maze=occupancy_map)
 
         # We will use this delta function to search surrounding nodes.
         delta = [[-1, 0],  # go up
@@ -83,27 +79,25 @@ class Dijkstra():
             pprint.pprint(occ_map)
 
         # Converge start and goal positions to map indices.
-        x = int(math.ceil((start.item(0) / x_spacing) - 0.5))  # startingx
-        y = int(math.ceil((start.item(1) / y_spacing) - 0.5))  # startingy
+        startX = int(math.ceil((start.item(0) / x_spacing) - 0.5))  # startingx
+        startY = int(math.ceil((start.item(1) / y_spacing) - 0.5))  # startingy
         goalX = int(math.ceil((goal.item(0) / x_spacing) - 0.5))
         goalY = int(math.ceil((goal.item(1) / y_spacing) - 0.5))
-        print("Start Pose: ", x, y)
+        print("Start Pose: ", startX, startY)
         print("Goal Pose: ", goalX, goalY)
 
         # Make a map to keep track of all the nodes and their cost distance values.
         possible_nodes = [[0 for row in range(len(occ_map[0]))] for col in range(len(occ_map))]
-        row = y
-        col = x
+        row = startY
+        col = startX
 
         # Show the starting node and goal node.
         # 5 looks similar to S and 6 looks similar to G.
         possible_nodes[row][col] = 5
 
         if visual == True:
-            viz_map[row][col] = 5
-            viz_map[goalY][goalX] = 6
-            plt.imshow(viz_map, origin='upper', interpolation='none', clim=colormapval)
-            plt.pause(2)
+            self.mazeUI.show_initial_and_goal_target(viz_map=self.viz_map, startX=row, startY=col, goalX=goalX, goalY=goalY)
+
 
         if debug == True:
             print("Possible Nodes: ")
@@ -127,12 +121,9 @@ class Dijkstra():
                 print("frontier nodes: ", searched_nodes)
 
             if current_node[1] == goalX and current_node[2] == goalY:
-                print("Goal found!")
                 goal_found = True
                 if visual == True:
-                    plt.text(2, 10, s="Goal found!", fontsize=18, style='oblique', ha='center', va='top')
-                    plt.imshow(viz_map, origin='upper', interpolation='none', clim=colormapval)
-                    plt.pause(2)
+                    self.mazeUI.goal_found(viz_map=self.viz_map)
                 break
             g_value, col, row = current_node
 
@@ -163,10 +154,7 @@ class Dijkstra():
                         if debug == True:
                             print("frontier_nodes:", frontier_nodes)
                         if visual == True:
-                            viz_map[possible_expansion_y][possible_expansion_x] = 3
-                            plt.imshow(viz_map, origin='upper', interpolation='none', clim=colormapval)
-                            plt.pause(.5)
-
+                            self.mazeUI.highligh_explored_node(viz_map=self.viz_map,x_cord=possible_expansion_x, y_cord=possible_expansion_y)
 
                         # This now builds parent/child relationship
                         parent_node[possible_node] = current_node
@@ -191,54 +179,32 @@ class Dijkstra():
             if debug == True:
                 print("Route: ", route)
             if visual == True:
-                for i in range(0, len(route)):
-                    viz_map[route[i][2]][route[i][1]] = 7
-                    plt.imshow(viz_map, origin='upper', interpolation='none', clim=colormapval)
-                    plt.pause(.5)
-
-                viz_map[goalY][goalX] = 7
-                plt.imshow(viz_map, origin='upper', interpolation='none', clim=colormapval)
-                plt.pause(5)
-
-
+                self.mazeUI.show_full_route(viz_map=self.viz_map, route=route, goalX=goalX, goalY=goalY)
 
             path = []
-            position = [start.item(0), start.item(1)]  # Starting point passed in by function
-            path.append(position)  # Add it to the list for the path
+            position = [startX, startY]  # Starting point passed in by function
+            #path.append(position)  # Add it to the list for the path
 
             for i in range(0, len(route)):
-                position = [round((route[i][1]+0.5)*x_spacing, 3), round((route[i][2]+0.5)*y_spacing, 3)]
+                position = [route[i][1], route[i][2]]
                 path.append(position)
 
             # Add the goal state:
-
-            position = [goal.item(0), goal.item(1)]
+            position = [goalX, goalY]
             path.append(position)
-
-            print("Path: ")
-            pprint.pprint(path)
-
-            # Convert to numpy array and return.
-            path = np.array(path)
+      
             return path
 
         else:
             if visual == True:
-                plt.text(2, 10, s="No path found...", fontsize=18, style='oblique', ha='center', va='top')
-                plt.imshow(viz_map, origin='upper', interpolation='none', clim=colormapval)
-                plt.pause(5)
+                self.mazeUI.no_path_found(viz_map=self.viz_map)
             return False
 
 
-    def boolean_coordinates_into_np_array(self, x, y, x_spacing, y_spacing, theta):
-        ###
-        # Drafts
-        # (2+0.5)*0.13= start.item(0)
-        # goalX = int(math.ceil((goal.item(0) / x_spacing) - 0.5))
-        #
-        # x=2,y=1 -> [0.3], [0.3]
-        # x=5,y=5 -> [0.6], [1]
-        ###
+    def coordinates_into_np_array(self, x, y, x_spacing, y_spacing, theta):
+        """
+            Duplicate function in maze_ui.py
+        """
 
         start_item0 = (x + 0.5) * x_spacing
         start_item1 = (y + 0.5) * y_spacing
@@ -246,17 +212,6 @@ class Dijkstra():
 
 
     def exec(self, maze, start, end, debug=False, visual=False):
-        #TODO: 
-        # a) por isto a funcionar atraves do main.py
-        #       -> obter o shortest path 
-        # b) por a funcionar o a_star e djikstra iterativamente 
-        #           -> (p.e. calcular o melhor percurso e depois iterar 1 "step" de cada vez com todos os robots)
-        # c) ter regras para desbloquear o transito / processamento de colisões
-        #       -> p.e. adicionar validação dentro do iterador (if next step is blocked, entrar num metodo de tratamento de colisoes)
-        #           -> tratamento de colisoes tenta p.e. meter os robots a dar um passo para a direita ou assim
-        # d) DQN para termos avaliacao a AAUTIA
-        # e) Artigo IEEE
-
         """
         Function that provides a few examples of maps and their solution paths
         """
@@ -269,8 +224,8 @@ class Dijkstra():
         x_goal = end[0]
         y_goal = end[1]
 
-        start1 = self.boolean_coordinates_into_np_array(x=x_start, y=y_start, x_spacing=x_spacing1, y_spacing=y_spacing1, theta=0)
-        goal1 = self.boolean_coordinates_into_np_array(x=x_goal,y=y_goal, x_spacing=x_spacing1, y_spacing=y_spacing1, theta=0)
+        start1 = self.coordinates_into_np_array(x=x_start, y=y_start, x_spacing=x_spacing1, y_spacing=y_spacing1, theta=0)
+        goal1 = self.coordinates_into_np_array(x=x_goal,y=y_goal, x_spacing=x_spacing1, y_spacing=y_spacing1, theta=0)
 
         path1 = self.dijkstras(
             occupancy_map=test_map1, 
@@ -282,73 +237,75 @@ class Dijkstra():
             visual=visual
         )
 
-        true_path1 = np.array([
-            [0.3, 0.3],
-            [0.325, 0.3],
-            [0.325, 0.5],
-            [0.325, 0.7],
-            [0.325, 0.9],
-            [0.325, 1.1],
-            [0.455, 1.1],
-            [0.585, 1.1],
-            [0.6, 1.0]
-        ])
-        if np.array_equal(path1,true_path1):
-            print("Path 1 passes")
+        return path1
 
-        test_map2 = np.array([
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 0, 1, 1, 0, 0, 1],
-                [1, 0, 0, 1, 1, 0, 0, 1],
-                [1, 0, 0, 1, 1, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1]])
-        start2 = np.array([[0.5], [1.0], [1.5707963267948966]])
-        goal2 = np.array([[1.1], [0.9], [-1.5707963267948966]])
-        x_spacing2 = 0.2
-        y_spacing2 = 0.2
-        path2 = self.dijkstras(test_map2,x_spacing2,y_spacing2,start2,goal2)
-        true_path2 = np.array([[ 0.5,  1.0],  # [2, 5]
-                            [ 0.5,  1.1],  # [2, 5]
-                            [ 0.5,  1.3],  # [2, 6]
-                            [ 0.5,  1.5],  # [2, 7]
-                            [ 0.7,  1.5],  # [3, 7]
-                            [ 0.9,  1.5],  # [4, 7]
-                            [ 1.1,  1.5],  # [5, 7]
-                            [ 1.1,  1.3],  # [5, 6]
-                            [ 1.1,  1.1],  # [5, 5]
-                            [ 1.1,  0.9]   # [5, 4]
-                            ])
-
-        if np.array_equal(path2,true_path2):
-            print("Path 2 passes")
-
-        """Test 3 is set up to fail, no path should be found
-        because of a wall between the start node and goal node."""
-
-        test_map3 = np.array([
-                [1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1]])
-        x_spacing3 = 0.13
-        y_spacing3 = 0.2
-        start3 = np.array([[0.3], [0.3], [0]])
-        goal3 = np.array([[0.6], [1], [0]])
-        path3 = self.dijkstras(test_map3, x_spacing3, y_spacing3, start3,goal3)
-
-        if path3 == False:
-            print("Path 3 passes")
+        #true_path1 = np.array([
+        #    [0.3, 0.3],
+        #    [0.325, 0.3],
+        #    [0.325, 0.5],
+        #    [0.325, 0.7],
+        #    [0.325, 0.9],
+        #    [0.325, 1.1],
+        #    [0.455, 1.1],
+        #    [0.585, 1.1],
+        #    [0.6, 1.0]
+        #])
+        #if np.array_equal(path1,true_path1):
+        #    print("Path 1 passes")
+#
+        #test_map2 = np.array([
+        #        [0, 0, 0, 0, 0, 0, 0, 0],
+        #        [0, 0, 0, 0, 0, 0, 0, 0],
+        #        [0, 0, 0, 0, 0, 0, 0, 0],
+        #        [1, 1, 1, 1, 1, 1, 1, 1],
+        #        [1, 0, 0, 1, 1, 0, 0, 1],
+        #        [1, 0, 0, 1, 1, 0, 0, 1],
+        #        [1, 0, 0, 1, 1, 0, 0, 1],
+        #        [1, 0, 0, 0, 0, 0, 0, 1],
+        #        [1, 0, 0, 0, 0, 0, 0, 1],
+        #        [1, 1, 1, 1, 1, 1, 1, 1]])
+        #start2 = np.array([[0.5], [1.0], [1.5707963267948966]])
+        #goal2 = np.array([[1.1], [0.9], [-1.5707963267948966]])
+        #x_spacing2 = 0.2
+        #y_spacing2 = 0.2
+        #path2 = self.dijkstras(test_map2,x_spacing2,y_spacing2,start2,goal2)
+        #true_path2 = np.array([[ 0.5,  1.0],  # [2, 5]
+        #                    [ 0.5,  1.1],  # [2, 5]
+        #                    [ 0.5,  1.3],  # [2, 6]
+        #                    [ 0.5,  1.5],  # [2, 7]
+        #                    [ 0.7,  1.5],  # [3, 7]
+        #                    [ 0.9,  1.5],  # [4, 7]
+        #                    [ 1.1,  1.5],  # [5, 7]
+        #                    [ 1.1,  1.3],  # [5, 6]
+        #                    [ 1.1,  1.1],  # [5, 5]
+        #                    [ 1.1,  0.9]   # [5, 4]
+        #                    ])
+#
+        #if np.array_equal(path2,true_path2):
+        #    print("Path 2 passes")
+#
+        #"""Test 3 is set up to fail, no path should be found
+        #because of a wall between the start node and goal node."""
+#
+        #test_map3 = np.array([
+        #        [1, 1, 1, 1, 1, 1, 1, 1],
+        #        [1, 0, 0, 0, 0, 0, 0, 1],
+        #        [1, 0, 0, 0, 0, 0, 0, 1],
+        #        [1, 0, 0, 0, 0, 0, 0, 1],
+        #        [1, 1, 1, 1, 1, 1, 1, 1],
+        #        [1, 0, 0, 0, 0, 0, 0, 1],
+        #        [1, 0, 0, 0, 0, 0, 0, 1],
+        #        [1, 0, 0, 0, 0, 0, 0, 1],
+        #        [1, 0, 0, 0, 0, 0, 0, 1],
+        #        [1, 1, 1, 1, 1, 1, 1, 1]])
+        #x_spacing3 = 0.13
+        #y_spacing3 = 0.2
+        #start3 = np.array([[0.3], [0.3], [0]])
+        #goal3 = np.array([[0.6], [1], [0]])
+        #path3 = self.dijkstras(test_map3, x_spacing3, y_spacing3, start3,goal3)
+#
+        #if path3 == False:
+        #    print("Path 3 passes")
 
 
     #start = (0, 0)
