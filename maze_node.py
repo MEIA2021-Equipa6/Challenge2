@@ -34,7 +34,6 @@ class MazeOperations():
         if maze[node.position[0]][node.position[1]] != 1:
             return True
 
-
     def verify_out_of_bounds(self, maze, node):
          # out of bounds
         if node.position[0] >= len(maze[0]) or node.position[0] < 0 \
@@ -49,70 +48,3 @@ class MazeOperations():
             possible_neighbor_nodes.append(neighbor_node)
 
         return possible_neighbor_nodes
-
-        
-
-
-'''
-It is being assumed that each line in the maze has the same length
-'''
-def astar(maze, start_pos, end_pos):
-    start_node = MazeNode(None, start_pos)
-    end_node = MazeNode(None, end_pos)
-
-    mo = MazeOperations()
-
-    open_list = [start_node]
-    closed_list = []
-
-    while len(open_list) > 0:
-        # step 1: find open node with smallest f number
-
-        open_list.sort(key=lambda x: (x.f, x.h))
-        current_node = open_list[0]
-
-        open_list.pop(0)
-        closed_list.append(current_node)
-
-        # step 2: if current is end node, build path, return
-
-        if current_node == end_node:
-            path = []
-            node_in_path = current_node
-            while node_in_path is not None:
-                path.append(node_in_path.position)
-                node_in_path = node_in_path.parent
-            return path[::-1]
-
-        # step 3: calculate neighbor nodes
-
-        neighbor_nodes = mo.find_neighbor_nodes(current_node=current_node)
-        for neighbor_node in neighbor_nodes:
-
-            # out of bounds
-            if mo.verify_out_of_bounds(maze=maze, neighbor_node=neighbor_node):
-                continue
-
-            # obstacle
-            if mo.verify_obstacles(maze=maze, neighbor_node=neighbor_node):
-                continue
-
-            # in closed list
-            if neighbor_node in closed_list:
-                continue
-
-            # current_node is the parent node
-            neighbor_node.g = current_node.g + (
-                    abs(neighbor_node.position[0] - current_node.position[0]) ** 2 +
-                    abs(neighbor_node.position[1] - current_node.position[1]) ** 2
-            )
-            new_h = abs(neighbor_node.position[0] - end_node.position[0]) ** 2 + \
-                    abs(neighbor_node.position[1] - end_node.position[1]) ** 2
-
-            if neighbor_node in open_list:
-                if new_h < neighbor_node.h:
-                    neighbor_node.h = new_h
-            else:
-                open_list.append(neighbor_node)
-
-            neighbor_node.calculate_f()

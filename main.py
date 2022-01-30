@@ -1,9 +1,11 @@
+from re import M
 from signal import valid_signals
 from dijkstra import Dijkstra
 from random import randrange
 from maze_ui import MazeUI
 import time
 import math
+import time
 from a_star import PathPlanner
 
 X_DIM = 14
@@ -73,7 +75,6 @@ def find_next_order_path(orders_rb, test_planner):
     return shortest_path_rb
 
 
-
 def execute_robot_movement(orders_rb, missing_path_rb, current_maze, test_planner, rb_current_pos, viz_map, color_modifier=0):
     # if the robot has somewhere to go, move
     if len(missing_path_rb) > 0:
@@ -93,6 +94,51 @@ def draw_moving_to_pos(rb_moving_to_pos, viz_map, color_modifier=0):
     #coords_to_draw = mazeUI.coordinates_into_np_array(x=rb_moving_to_pos[0], y=rb_moving_to_pos[1])
     mazeUI.highlight_node(viz_map=viz_map, posX=rb_moving_to_pos[0], posY=rb_moving_to_pos[1], color_modifier=color_modifier)
 
+
+def performance_check(maze, orders, test_planner, dijkstra):
+    
+    execution_time_astar = 0
+    execution_time_dijkstra = 0
+
+    solution_cost_astar = 0
+    solution_cost_dijkstra = 0
+
+    for order in orders:
+        tmp_time_astar = 0
+        tmp_time_dijkstra = 0
+        
+        tmp_cost_astar = 0
+        tmp_cost_dijkstra = 0
+
+        start_point = order[0]
+        end_point = order[1]
+ 
+        # ==== A* Performance Tests ====
+        start_time_astar = time.time()
+        shortest_path_astar = test_planner.a_star(start_cart=start_point, goal_cart=end_point)
+    
+        tmp_time_astar = time.time() - start_time_astar
+        execution_time_astar += tmp_time_astar
+        
+        tmp_cost_astar = len(shortest_path_astar)
+        solution_cost_astar += tmp_cost_astar
+        
+        print(f"\nA* time: {tmp_time_astar}")
+        print(f"Cost: {tmp_cost_astar}\n")
+
+        # ==== Dijkstra Performance Tests ====
+        start_time_dijkstra = time.time()
+        shortest_path_dijkstra = dijkstra.exec(maze=maze, start=start_point, end=end_point, visual=False)
+        
+        tmp_time_dijkstra = time.time() - start_time_dijkstra
+        execution_time_dijkstra += tmp_time_dijkstra
+        
+        tmp_cost_dijkstra = len(shortest_path_dijkstra)
+        solution_cost_dijkstra += tmp_cost_dijkstra
+        
+        print(f"\nDijkstra time : {tmp_time_dijkstra}")
+        print(f"Cost: {tmp_cost_dijkstra}\n")
+        
 
 def main():
     # x       0  1  2  3  4  5  6  7  8  9 10 11 12 13 14    # y
@@ -116,7 +162,11 @@ def main():
     end = (7, 8)
 
     # Dijkstra
+    start_time_creation_of_dijktra = time.time()
     dijkstra = Dijkstra()
+
+    print(f"\n\n **** Time to generate dijkstra matrix =  {time.time()-start_time_creation_of_dijktra}")
+
     shortest_path_dijkstra = dijkstra.exec(maze=maze, start=start, end=end, visual=False)
     print("\n\n=== Dijkstra ===")
     print(f"Shortest Path: {shortest_path_dijkstra}")
@@ -153,6 +203,9 @@ def main():
     # Path Planned for robots to deliver packages
     missing_path_r1 = []
     missing_path_r2 = []
+
+    # Performance Check
+    performance_check(maze=current_maze, orders=orders_r1, test_planner=test_planner, dijkstra=dijkstra)
 
     while(len(orders_r2) > 0 or len(orders_r1) > 0):
         # if we have more orders 'waiting', let's assign them to the robot if he doesn't have anything to do
@@ -215,11 +268,3 @@ def main():
 if __name__ == '__main__':
     main()
 
-        #TODO: 
-        # a) Nao estou a progredir corretamente 
-        #   -> Nao está a mostrar no vizmap o caminho dos robots
-        #   -> Estou num loop infinito e acho que é por causa do "is_empty" ou assim
-        # b) Conclusões artigo IEEE
-        # c) Blog
-        # d) merge
-        # e) submeter
