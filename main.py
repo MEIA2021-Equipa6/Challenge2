@@ -5,6 +5,7 @@ from random import randrange
 from maze_ui import MazeUI
 import time
 import math
+import random
 import time
 from a_star import PathPlanner
 
@@ -14,7 +15,7 @@ Y_DIM = 14
 mazeUI = MazeUI(x_spacing=0.13, y_spacing = 0.2, theta=0)
 
 def empty_position(maze, position):
-    return  not maze[position[0]][position[1]] == 1     
+    return not maze[position[1]][position[0]] == 1     
 
 
 def generate_packages_robot(maze, number_of_packages=10, robot_orders=[]):
@@ -60,12 +61,17 @@ def handle_with_possible_colision(current_maze, rb_moving_to_pos, current_pos):
         moves_to_remove.append([[0, -1], [-1, -1], [1, -1]])
     possible_moves = [possible_move for possible_move in possible_moves if possible_move not in moves_to_remove]
 
+    for move in possible_moves:
+        suggested_move_pos = [y + x for x, y in zip(move, current_pos)]
+        if not empty_position(maze=current_maze, position=suggested_move_pos):
+            possible_moves.remove(move)
+
     if not possible_moves:
         return current_pos
     else:
-        move = possible_moves[randrange(0, len(possible_moves)-1)]
+        move = random.choice(possible_moves)	
         inverse_move = [element * -1 for element in move]
-        return [x + y for x, y in zip(move, current_pos)], inverse_move
+        return [y + x for x, y in zip(move, current_pos)], inverse_move
 
 
 def find_next_order_path(orders_rb, test_planner):
@@ -82,26 +88,29 @@ def execute_robot_movement(orders_rb, missing_path_rb, current_maze, test_planne
         rb_moving_to_pos = missing_path_rb[1]
         if not empty_position(current_maze, rb_moving_to_pos):
             rb_moving_to_pos, inverse_move = handle_with_possible_colision(current_maze=current_maze, rb_moving_to_pos=rb_moving_to_pos, current_pos=rb_current_pos)
-            missing_path_rb.insert(0,inverse_move)
+            missing_path_rb.insert(0, inverse_move)
         
-        current_maze[rb_moving_to_pos[0]][rb_moving_to_pos[1]] = 1
+        current_maze[rb_moving_to_pos[1]][rb_moving_to_pos[0]] = 1
+        missing_path_rb.pop(0)
         draw_moving_to_pos(rb_moving_to_pos=rb_moving_to_pos, viz_map=viz_map, color_modifier=color_modifier)
         return missing_path_rb
 
 
 def draw_moving_to_pos(rb_moving_to_pos, viz_map, color_modifier=0):
-
     #coords_to_draw = mazeUI.coordinates_into_np_array(x=rb_moving_to_pos[0], y=rb_moving_to_pos[1])
-    mazeUI.highlight_node(viz_map=viz_map, posX=rb_moving_to_pos[0], posY=rb_moving_to_pos[1], color_modifier=color_modifier)
+    mazeUI.highlight_node(viz_map=viz_map, posX=rb_moving_to_pos[1], posY=rb_moving_to_pos[0], color_modifier=color_modifier)
 
 
-def performance_check(maze, orders, test_planner, dijkstra):
+def performance_check(maze, orders):
     
     execution_time_astar = 0
     execution_time_dijkstra = 0
 
     solution_cost_astar = 0
     solution_cost_dijkstra = 0
+
+    dijkstra = Dijkstra()
+    test_planner = PathPlanner(grid=maze, visual=False)
 
     for order in orders:
         tmp_time_astar = 0
@@ -175,7 +184,7 @@ def main():
     # A*
     # Create an instance of the PathPlanner class:
     print("\n\n=== A* ===")
-    test_planner = PathPlanner(grid=maze, visual=False)
+    test_planner = PathPlanner(grid=maze, visual=True)
     # Plan a path.
     shortest_path_astar = test_planner.a_star(start, end)
     print(f"Shortest Path: {shortest_path_astar}")
@@ -189,11 +198,11 @@ def main():
     viz_map = mazeUI.create_initial_maze(maze=current_maze)
 
     #orders_r1 = generate_packages_robot(maze=maze, number_of_packages=3)
-    orders_r1 = [[[5, 6], [11, 4]], [[11, 4], [1, 11]], [[1, 11], [14, 10]]] 
+    orders_r1 = [[[5, 6], [11, 4]], [[11, 4], [1, 11]], [[1, 11], [14, 10]]]
     print(f"Orders R1: {orders_r1}")
 
     #orders_r2 = generate_packages_robot(maze=maze, number_of_packages=3)
-    orders_r2 = [[[12, 9], [11, 1]], [[11, 1], [1, 5]], [[1, 5], [7, 7]]] 
+    orders_r2 = [[[12, 9], [11, 1]], [[11, 1], [1, 5]], [[1, 5], [7, 7]]]
     print(f"\nOrders R2: {orders_r2}")
     
     # Position flags of robots
@@ -205,8 +214,9 @@ def main():
     missing_path_r2 = []
 
     # Performance Check
-    performance_check(maze=current_maze, orders=orders_r1, test_planner=test_planner, dijkstra=dijkstra)
+    performance_check(maze=current_maze, orders=orders_r1)
 
+          
     while(len(orders_r2) > 0 or len(orders_r1) > 0):
         # if we have more orders 'waiting', let's assign them to the robot if he doesn't have anything to do
         if len(orders_r1) > 0 and not missing_path_r1:
@@ -263,7 +273,7 @@ def main():
                 print("R2: Goal Achieved, dropping package")
                 orders_r2.pop(0)
 
-        time.sleep(1.5)  
+        time.sleep(0.5)  
 
 if __name__ == '__main__':
     main()

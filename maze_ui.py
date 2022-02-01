@@ -22,7 +22,7 @@ class MazeUI():
         plt.yticks(visible=False)
         plt.imshow(viz_map, origin='upper', interpolation='none', clim=self.colormapval)
         ax.set_aspect('equal')
-        plt.pause(1)
+        plt.pause(0.2)
         return viz_map
 
 
@@ -30,7 +30,7 @@ class MazeUI():
         viz_map[startY][startX] = 5 - color_modifier
         viz_map[goalY][goalX] = 6 - color_modifier
         plt.imshow(viz_map, origin='upper', interpolation='none', clim=self.colormapval)
-        plt.pause(0.5)
+        plt.pause(0.2)
 
 
     def transfrom_coords_to_draw(self, pos):
@@ -49,18 +49,20 @@ class MazeUI():
     def highligh_explored_node(self, viz_map, x_cord, y_cord, color_modifier=0):
         viz_map[y_cord][x_cord] = 3 - color_modifier
         plt.imshow(viz_map, origin='upper', interpolation='none', clim=self.colormapval)
-        plt.pause(.15)
+        plt.pause(.001)
 
 
     def highlight_node(self, viz_map, posY, posX, color_modifier=0):
         viz_map[posY][posX] = 7 - color_modifier
+        plt.imshow(viz_map, origin='upper', interpolation='none', clim=self.colormapval)
+        plt.pause(.001)
 
 
     def show_full_route(self, viz_map, route, goalX, goalY, color_modifier=0):
         for i in range(0, len(route)):
             self.highlight_node(viz_map, posY=route[i][2], posX=route[i][1], color_modifier=color_modifier)
             plt.imshow(viz_map, origin='upper', interpolation='none', clim=self.colormapval)
-            plt.pause(.1)
+            plt.pause(.001)
 
         viz_map[goalY][goalX] = 7 - color_modifier
         plt.imshow(viz_map, origin='upper', interpolation='none', clim=self.colormapval)
