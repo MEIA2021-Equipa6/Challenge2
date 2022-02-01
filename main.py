@@ -18,7 +18,8 @@ def empty_position(maze, position):
     return not maze[position[1]][position[0]] == 1     
 
 
-def generate_packages_robot(maze, number_of_packages=10, robot_orders=[]):
+def generate_packages_robot(maze, number_of_packages=10):
+    robot_orders = []
     for i in range(number_of_packages):
         if i==0:
             start, end = generate_random_package(maze)
@@ -29,6 +30,25 @@ def generate_packages_robot(maze, number_of_packages=10, robot_orders=[]):
     return robot_orders
 
 
+def test_dataset_rl (orders_robot, maze):
+    print("\n\n###############################################")
+    print("Generation of Test Dataset for Reinforced Learning")
+    dijkstra = Dijkstra()
+    test_dataset = []
+    for order in orders_robot:
+        start, end = order        
+        shortest_path_dijkstra = dijkstra.exec(maze=maze, start=start, end=end)
+        if not shortest_path_dijkstra:
+            continue
+        best_solution_cost = len(shortest_path_dijkstra)
+        test_dataset.append([start, end, best_solution_cost])
+    
+    print(f"Generated {len(orders_robot)} testcases")
+    print(f"Test Dataset:\n {test_dataset}")
+    print("\n###############################################")
+    return test_dataset
+
+
 def generate_random_package(maze, start=None):
     start = find_empty_space(maze) if not start else start
     goal = find_empty_space(maze)
@@ -36,15 +56,15 @@ def generate_random_package(maze, start=None):
 
 
 def find_empty_space(maze):
-    x_value = randrange(0, X_DIM)
-    y_value = randrange(0, Y_DIM)
+    x_value = randrange(X_DIM)
+    y_value = randrange(Y_DIM)
  
     while True:
         if empty_position(maze, [x_value, y_value]):
             break
         else:
-            x_value = randrange(0, X_DIM)
-            y_value = randrange(0, Y_DIM)
+            x_value = randrange(X_DIM)
+            y_value = randrange(Y_DIM)
     return [x_value, y_value]
 
 
@@ -102,7 +122,8 @@ def draw_moving_to_pos(rb_moving_to_pos, viz_map, color_modifier=0):
 
 
 def performance_check(maze, orders):
-    
+    print("\n\n###############################################")
+    print("Performance Analysis")
     execution_time_astar = 0
     execution_time_dijkstra = 0
 
@@ -110,7 +131,7 @@ def performance_check(maze, orders):
     solution_cost_dijkstra = 0
 
     dijkstra = Dijkstra()
-    test_planner = PathPlanner(grid=maze, visual=False)
+    test_planner = PathPlanner(grid=maze)
 
     for order in orders:
         tmp_time_astar = 0
@@ -137,7 +158,7 @@ def performance_check(maze, orders):
 
         # ==== Dijkstra Performance Tests ====
         start_time_dijkstra = time.time()
-        shortest_path_dijkstra = dijkstra.exec(maze=maze, start=start_point, end=end_point, visual=False)
+        shortest_path_dijkstra = dijkstra.exec(maze=maze, start=start_point, end=end_point)
         
         tmp_time_dijkstra = time.time() - start_time_dijkstra
         execution_time_dijkstra += tmp_time_dijkstra
@@ -147,6 +168,36 @@ def performance_check(maze, orders):
         
         print(f"\nDijkstra time : {tmp_time_dijkstra}")
         print(f"Cost: {tmp_cost_dijkstra}\n")
+
+    print(f"Total Dijkstra time : {execution_time_dijkstra}")
+    print(f"Total A* time : {execution_time_astar}")
+    print(f"\nTotal Dijkstra Cost: {solution_cost_dijkstra}")
+    print(f"Total A* Cost: {solution_cost_astar}\n")
+
+    print("\n###############################################")
+
+
+def store_test_dataset(test_dataset):
+    import csv
+    import os
+    current_time = time.time()
+    dir_name = "test_datasets/"
+    # Create target Directory if don't exist
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+        print("Directory " , dir_name ,  " Created ")
+    else:    
+        print("Directory " , dir_name ,  " already exists")
+
+    filename = f"{dir_name}/{current_time}.csv"
+    header = ['origin_point', 'destination_point', 'cost']
+    # open the file in the write mode
+    with open(filename, 'w', encoding='UTF8')as f:
+        writer = csv.writer(f)
+        # write the header
+        writer.writerow(header)
+        # write multiple rows
+        writer.writerows(test_dataset)
         
 
 def main():
@@ -195,14 +246,13 @@ def main():
 
     # Start iterating different robots
     current_maze = maze
-    viz_map = mazeUI.create_initial_maze(maze=current_maze)
 
-    #orders_r1 = generate_packages_robot(maze=maze, number_of_packages=3)
-    orders_r1 = [[[5, 6], [11, 4]], [[11, 4], [1, 11]], [[1, 11], [14, 10]]]
+    orders_r1 = generate_packages_robot(maze=maze, number_of_packages=10)
+    #orders_r1 = [[[5, 6], [11, 4]], [[11, 4], [1, 11]], [[1, 11], [14, 10]]]
     print(f"Orders R1: {orders_r1}")
 
-    #orders_r2 = generate_packages_robot(maze=maze, number_of_packages=3)
-    orders_r2 = [[[12, 9], [11, 1]], [[11, 1], [1, 5]], [[1, 5], [7, 7]]]
+    orders_r2 = generate_packages_robot(maze=maze, number_of_packages=10)
+    #orders_r2 = [[[12, 9], [11, 1]], [[11, 1], [1, 5]], [[1, 5], [7, 7]]]
     print(f"\nOrders R2: {orders_r2}")
     
     # Position flags of robots
@@ -216,65 +266,71 @@ def main():
     # Performance Check
     performance_check(maze=current_maze, orders=orders_r1)
 
-          
-    while(len(orders_r2) > 0 or len(orders_r1) > 0):
-        # if we have more orders 'waiting', let's assign them to the robot if he doesn't have anything to do
-        if len(orders_r1) > 0 and not missing_path_r1:
-            start_r1 = orders_r1[0][0]
-            end_r1 = orders_r1[0][1]
-            shortest_path_r1 = test_planner.a_star(start_r1, end_r1)
-            missing_path_r1 = shortest_path_r1
-            mazeUI.show_initial_and_goal_target(
-                viz_map=viz_map,
-                startX=start_r1[0],
-                startY=start_r1[1],
-                goalX=end_r1[0],
-                goalY=end_r1[1],
-                color_modifier=2
-            )
-        
-        if len(orders_r2) > 0 and not missing_path_r2:
-            start_r2 = orders_r2[0][0]
-            end_r2 = orders_r2[0][1]
-            shortest_path_r2 = test_planner.a_star(start_r2, end_r2)
-            missing_path_r2 = shortest_path_r2
-            mazeUI.show_initial_and_goal_target(
-                viz_map=viz_map,
-                startX=start_r2[0],
-                startY=start_r2[1],
-                goalX=end_r2[0],
-                goalY=end_r2[1]
-            )
+    # Dataset creation to be used in RL
+    orders_test_dataset = generate_packages_robot(maze=maze, number_of_packages=5)
+    test_dataset = test_dataset_rl(orders_robot=orders_test_dataset, maze=current_maze)
+    store_test_dataset(test_dataset)
 
-        # if the robot has somewhere to go, move
-        if len(missing_path_r1) > 0: 
-            missing_path_r1 = execute_robot_movement(orders_rb=orders_r1, 
-                missing_path_rb=missing_path_r1, 
-                current_maze=current_maze,
-                test_planner=test_planner,
-                rb_current_pos=r1_current_pos,
-                viz_map=viz_map,
-                color_modifier=2)
-
-            if len(missing_path_r1) == 0:
-                print("R1: Goal Achieved, dropping package")
-                orders_r1.pop(0)
-
-
-        if len(missing_path_r2) > 0: 
-            missing_path_r2 = execute_robot_movement(orders_rb=orders_r2,
-                missing_path_rb=missing_path_r2, 
-                current_maze=current_maze,
-                test_planner=test_planner,
-                rb_current_pos=r2_current_pos,
-                viz_map=viz_map)
+    execution_flag = False
+    if execution_flag:
+        viz_map = mazeUI.create_initial_maze(maze=current_maze)
+        while(len(orders_r2) > 0 or len(orders_r1) > 0):
+            # if we have more orders 'waiting', let's assign them to the robot if he doesn't have anything to do
+            if len(orders_r1) > 0 and not missing_path_r1:
+                start_r1 = orders_r1[0][0]
+                end_r1 = orders_r1[0][1]
+                shortest_path_r1 = test_planner.a_star(start_r1, end_r1)
+                missing_path_r1 = shortest_path_r1
+                mazeUI.show_initial_and_goal_target(
+                    viz_map=viz_map,
+                    startX=start_r1[0],
+                    startY=start_r1[1],
+                    goalX=end_r1[0],
+                    goalY=end_r1[1],
+                    color_modifier=2
+                )
             
-            if len(missing_path_r2) == 0:
-                print("R2: Goal Achieved, dropping package")
-                orders_r2.pop(0)
+            if len(orders_r2) > 0 and not missing_path_r2:
+                start_r2 = orders_r2[0][0]
+                end_r2 = orders_r2[0][1]
+                shortest_path_r2 = test_planner.a_star(start_r2, end_r2)
+                missing_path_r2 = shortest_path_r2
+                mazeUI.show_initial_and_goal_target(
+                    viz_map=viz_map,
+                    startX=start_r2[0],
+                    startY=start_r2[1],
+                    goalX=end_r2[0],
+                    goalY=end_r2[1]
+                )
 
-        time.sleep(0.5)  
+            # if the robot has somewhere to go, move
+            if len(missing_path_r1) > 0: 
+                missing_path_r1 = execute_robot_movement(orders_rb=orders_r1, 
+                    missing_path_rb=missing_path_r1, 
+                    current_maze=current_maze,
+                    test_planner=test_planner,
+                    rb_current_pos=r1_current_pos,
+                    viz_map=viz_map,
+                    color_modifier=2)
+
+                if len(missing_path_r1) == 0:
+                    print("R1: Goal Achieved, dropping package")
+                    orders_r1.pop(0)
+
+
+            if len(missing_path_r2) > 0: 
+                missing_path_r2 = execute_robot_movement(orders_rb=orders_r2,
+                    missing_path_rb=missing_path_r2, 
+                    current_maze=current_maze,
+                    test_planner=test_planner,
+                    rb_current_pos=r2_current_pos,
+                    viz_map=viz_map)
+                
+                if len(missing_path_r2) == 0:
+                    print("R2: Goal Achieved, dropping package")
+                    orders_r2.pop(0)
+
+            time.sleep(0.5)  
 
 if __name__ == '__main__':
     main()
-
