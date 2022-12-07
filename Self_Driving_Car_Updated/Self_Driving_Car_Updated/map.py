@@ -8,9 +8,10 @@ import time
 
 # Importing the Kivy packages
 from kivy.app import App
+from kivy.input.providers.mouse import MouseMotionEvent
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
-from kivy.graphics import Color, Ellipse, Line
+from kivy.graphics import Color, Line
 from kivy.config import Config
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty
 from kivy.vector import Vector
@@ -42,6 +43,24 @@ def init():
     global goal_y
     global first_update
     sand = np.zeros((longueur,largeur))
+    for x in range(50, 200):
+        sand[x, 150] = 1
+
+    for x in range(450, 600):
+        for y in range(450, 550):
+            sand[x, y] = 1
+
+    for x in range(100, 150):
+        for y in range(250, 350):
+            sand[x , y] = 1
+
+    for x in range(450, 650):
+        for y in range(150, 250):
+            sand[x , y ] = 1
+
+    for x in range(200, 300):
+        sand[x, 450] = 1
+
     goal_x = 20
     goal_y = largeur - 20
     first_update = False
@@ -94,6 +113,16 @@ class Ball2(Widget):
     pass
 class Ball3(Widget):
     pass
+class Line1(Widget):
+    pass
+class Line2(Widget):
+    pass
+class Line3(Widget):
+    pass
+class Line4(Widget):
+    pass
+class Line5(Widget):
+    pass
 
 # Creating the game class
 
@@ -103,6 +132,11 @@ class Game(Widget):
     ball1 = ObjectProperty(None)
     ball2 = ObjectProperty(None)
     ball3 = ObjectProperty(None)
+    line1 = ObjectProperty(None)
+    line2 = ObjectProperty(None)
+    line3 = ObjectProperty(None)
+    line4 = ObjectProperty(None)
+    line5 = ObjectProperty(None)
 
     def serve_car(self):
         self.car.center = self.center
@@ -123,7 +157,6 @@ class Game(Widget):
         largeur = self.height
         if first_update:
             init()
-
         xx = goal_x - self.car.x
         yy = goal_y - self.car.y
         orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
