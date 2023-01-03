@@ -39,56 +39,147 @@
             pos: self.pos
             size: self.size
 
-<Line1>:
+<Rectangle1>:
     canvas:
         Color:
             rgb: 0.8,0.7,0
-        Line:
-            points: 50, 150, 200, 150
-            width: 5
+        Rectangle:
+            pos: 200, 200
+            size: 100, 400
 
-<Line2>:
+<Rectangle2>:
     canvas:
         Color:
             rgb: 0.8,0.7,0
-        Line:
-            points: 450, 450, 600, 550
-            width: 5
+        Rectangle:
+            pos: 500, 100
+            size: 200, 50
 
-<Line3>:
+<Rectangle3>:
     canvas:
         Color:
             rgb: 0.8,0.7,0
-        Line:
-            points: 100, 250, 150, 350
-            width: 5
+        Rectangle:
+            pos: 1200, 800
+            size: 50, 300
 
-<Line4>:
+<Rectangle4>:
     canvas:
         Color:
             rgb: 0.8,0.7,0
-        Line:
-            points: 450, 150, 600, 250
-            width: 5
+        Rectangle:
+            pos: 500, 500
+            size: 200, 200
 
-<Line4>:
+<Rectangle5>:
     canvas:
         Color:
             rgb: 0.8,0.7,0
-        Line:
-            points: 200, 450, 300, 450
-            width: 5
+        Rectangle:
+            pos: 200, 800
+            size: 50, 300
 
+<Rectangle6>:
+    canvas:
+        Color:
+            rgb: 0.8,0.7,0
+        Rectangle:
+            pos: 600, 800
+            size: 400, 100
+
+
+<Rectangle7>:
+    canvas:
+        Color:
+            rgb: 0.8,0.7,0
+        Rectangle:
+            pos: 600, 300
+            size: 100, 100
+
+
+<Rectangle8>:
+    canvas:
+        Color:
+            rgb: 0.8,0.7,0
+        Rectangle:
+            pos: 900, 200
+            size: 400, 100
+
+<Rectangle9>:
+    canvas:
+        Color:
+            rgb: 0.8,0.7,0
+        Rectangle:
+            pos: 1000, 500
+            size: 200, 100
+
+<Rectangle10>:
+    canvas:
+        Color:
+            rgb: 0.8,0.7,0
+        Rectangle:
+            pos: 400, 1100
+            size: 350, 50
+
+<Rectangle11>:
+    canvas:
+        Color:
+            rgb: 0.8,0.7,0
+        Rectangle:
+            pos: 1500, 500
+            size: 50, 500
+
+<Goal1>:
+    canvas:
+        Color:
+            rgb: 0,1.0,1.0
+        Ellipse:
+            pos: 1400, 900
+            size: 5, 5
+
+<Goal2>:
+    canvas:
+        Color:
+            rgb: 0,1.0,1.0
+        Ellipse:
+            pos: 100, 350
+            size: 5, 5
+
+<Goal3>:
+    canvas:
+        Color:
+            rgb: 0,1.0,1.0
+        Ellipse:
+            pos: 1200, 650
+            size: 5, 5
+
+<Goal4>:
+    canvas:
+        Color:
+            rgb: 0,1.0,1.0
+        Ellipse:
+            pos: 800, 1100
+            size: 5, 5
 <Game>:
     car: game_car
     ball1: game_ball1
     ball2: game_ball2
     ball3: game_ball3
-    line1: game_line1
-    line2: game_line2
-    line3: game_line3
-    line4: game_line4
-    line5: game_line5
+    rectangle1: game_rectangle1
+    rectangle2: game_rectangle2
+    rectangle3: game_rectangle3
+    rectangle4: game_rectangle4
+    rectangle5: game_rectangle5
+    rectangle6: game_rectangle6
+    rectangle7: game_rectangle7
+    rectangle8: game_rectangle8
+    rectangle9: game_rectangle9
+    rectangle10: game_rectangle10
+    rectangle11: game_rectangle11
+    goal1: game_goal1
+    goal2: game_goal2
+    goal3: game_goal3
+    goal4: game_goal4
 
     Car:
         id: game_car
@@ -102,13 +193,33 @@
     Ball3:
         id: game_ball3
         center: self.parent.center
-    Line1:
-        id: game_line1
-    Line2:
-        id: game_line2
-    Line3:
-        id: game_line3
-    Line4:
-        id: game_line4
-    Line5:
-        id: game_line5
+    Rectangle1:
+        id: game_rectangle1
+    Rectangle2:
+        id: game_rectangle2
+    Rectangle3:
+        id: game_rectangle3
+    Rectangle4:
+        id: game_rectangle4
+    Rectangle5:
+        id: game_rectangle5
+    Rectangle6:
+        id: game_rectangle6
+    Rectangle7:
+        id: game_rectangle7
+    Rectangle8:
+        id: game_rectangle8
+    Rectangle9:
+        id: game_rectangle9
+    Rectangle10:
+        id: game_rectangle10
+    Rectangle11:
+        id: game_rectangle11
+    Goal1:
+        id: game_goal1
+    Goal2:
+        id: game_goal2
+    Goal3:
+        id: game_goal3
+    Goal4:
+        id: game_goal4

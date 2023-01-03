@@ -22,6 +22,8 @@ from ai import Dqn
 
 # Adding this line if we don't want the right click to put a red point
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+Config.set('graphics', 'width', '1600')
+Config.set('graphics', 'height', '1200')
 
 # Introducing last_x and last_y, used to keep the last point in memory when we draw the sand on the map
 last_x = 0
@@ -34,6 +36,7 @@ brain = Dqn(5,3,0.9)
 action2rotation = [0,20,-20]
 last_reward = 0
 scores = []
+goals = [[1400, 900], [100, 350], [1200, 650], [800, 1100]]
 
 # Initializing the map
 first_update = True
@@ -42,27 +45,68 @@ def init():
     global goal_x
     global goal_y
     global first_update
+    global cleared_goals
+    cleared_goals = 0
     sand = np.zeros((longueur,largeur))
-    for x in range(50, 200):
-        sand[x, 150] = 1
 
-    for x in range(450, 600):
-        for y in range(450, 550):
+    # Rectangulo 1
+    for x in range(200, 300):
+        for y in range(200, 600):
             sand[x, y] = 1
 
-    for x in range(100, 150):
-        for y in range(250, 350):
-            sand[x , y] = 1
+    # Rectangulo 2
+    for x in range(500, 700):
+        for y in range(100, 150):
+            sand[x, y] = 1
 
-    for x in range(450, 650):
-        for y in range(150, 250):
-            sand[x , y ] = 1
+    # Rectangulo 3
+    for x in range(1200, 1250):
+        for y in range(800, 1100):
+            sand[x, y] = 1
 
-    for x in range(200, 300):
-        sand[x, 450] = 1
+    # Rectangulo 4
+    for x in range(500, 700):
+        for y in range(500, 700):
+            sand[x, y] = 1
 
-    goal_x = 20
-    goal_y = largeur - 20
+    # Rectangulo 5
+    for x in range(200, 250):
+        for y in range(800, 1100):
+            sand[x, y] = 1
+
+    # Rectangulo 6
+    for x in range(600, 1000):
+        for y in range(800, 900):
+            sand[x, y] = 1
+
+    # Rectangulo 7
+    for x in range(600, 700):
+        for y in range(300, 400):
+            sand[x, y] = 1
+
+    # Rectangulo 8
+    for x in range(900, 1300):
+        for y in range(200, 300):
+            sand[x, y] = 1
+
+    # Rectangulo 9
+    for x in range(1000, 1200):
+        for y in range(500, 600):
+            sand[x, y] = 1
+
+    # Rectangulo 10
+    for x in range(400, 750):
+        for y in range(1100, 1150):
+            sand[x, y] = 1
+
+    # Rectangulo 11
+    for x in range(1500, 1550):
+        for y in range(500, 1000):
+            sand[x, y] = 1
+
+    goal_x = goals[cleared_goals][0]
+    goal_y = goals[cleared_goals][1]
+
     first_update = False
 
 # Initializing the last distance
@@ -113,15 +157,35 @@ class Ball2(Widget):
     pass
 class Ball3(Widget):
     pass
-class Line1(Widget):
+class Rectangle1(Widget):
     pass
-class Line2(Widget):
+class Rectangle2(Widget):
     pass
-class Line3(Widget):
+class Rectangle3(Widget):
     pass
-class Line4(Widget):
+class Rectangle4(Widget):
     pass
-class Line5(Widget):
+class Rectangle5(Widget):
+    pass
+class Rectangle6(Widget):
+    pass
+class Rectangle7(Widget):
+    pass
+class Rectangle8(Widget):
+    pass
+class Rectangle9(Widget):
+    pass
+class Rectangle10(Widget):
+    pass
+class Rectangle11(Widget):
+    pass
+class Goal1(Widget):
+    pass
+class Goal2(Widget):
+    pass
+class Goal3(Widget):
+    pass
+class Goal4(Widget):
     pass
 
 # Creating the game class
@@ -132,15 +196,51 @@ class Game(Widget):
     ball1 = ObjectProperty(None)
     ball2 = ObjectProperty(None)
     ball3 = ObjectProperty(None)
-    line1 = ObjectProperty(None)
-    line2 = ObjectProperty(None)
-    line3 = ObjectProperty(None)
-    line4 = ObjectProperty(None)
-    line5 = ObjectProperty(None)
+    rectangle1 = ObjectProperty(None)
+    rectangle2 = ObjectProperty(None)
+    rectangle3 = ObjectProperty(None)
+    rectangle4 = ObjectProperty(None)
+    rectangle5 = ObjectProperty(None)
+    rectangle6 = ObjectProperty(None)
+    rectangle7 = ObjectProperty(None)
+    rectangle8 = ObjectProperty(None)
+    rectangle9 = ObjectProperty(None)
+    rectangle10 = ObjectProperty(None)
+    rectangle11 = ObjectProperty(None)
+    goal1 = ObjectProperty(None)
+    goal2 = ObjectProperty(None)
+    goal3 = ObjectProperty(None)
+    goal4 = ObjectProperty(None)
 
     def serve_car(self):
         self.car.center = self.center
-        self.car.velocity = Vector(6, 0)
+        self.car.velocity = Vector(0, 0)
+        global longueur
+        global largeur
+        longueur = 1600
+        largeur = 1200
+        if first_update:
+            init()
+
+    def set_goal(self):
+        global goal_x
+        global goal_y
+        print("Enter X coord: ")
+        goal_x = int(input())
+        print("Enter Y coord: ")
+        goal_y = int(input())
+        is_sand = self.verify_if_sand(goal_x, goal_y)
+        if is_sand:
+            print("Input coordinates are part of an obstacle. Insert new ones")
+            self.set_goal()
+        else:
+            self.car.velocity = Vector(3, 0).rotate(self.car.angle)
+
+    def verify_if_sand(self, goal_x, goal_y):
+        if sand[goal_x, goal_y] == 1:
+            return True
+        else:
+            return False
 
     def update(self, dt):
 
@@ -150,13 +250,8 @@ class Game(Widget):
         global last_distance
         global goal_x
         global goal_y
-        global longueur
-        global largeur
+        global cleared_goals
 
-        longueur = self.width
-        largeur = self.height
-        if first_update:
-            init()
         xx = goal_x - self.car.x
         yy = goal_y - self.car.y
         orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
@@ -172,12 +267,12 @@ class Game(Widget):
 
         if sand[int(self.car.x),int(self.car.y)] > 0:
             self.car.velocity = Vector(1, 0).rotate(self.car.angle)
-            last_reward = -10
+            last_reward = -100
         else: # otherwise
-            self.car.velocity = Vector(6, 0).rotate(self.car.angle)
-            last_reward = -0.5
+            self.car.velocity = Vector(3, 0).rotate(self.car.angle)
+            last_reward = 0.0
             if distance < last_distance:
-                last_reward = 0.2
+                last_reward = 0.5
 
         if self.car.x < 10:
             self.car.x = 10
@@ -192,10 +287,20 @@ class Game(Widget):
             self.car.y = self.height - 10
             last_reward = -1
 
-        if distance < 100:
-            goal_x = self.width-goal_x
-            goal_y = self.height-goal_y
+        if distance < 25:
+            last_reward = 100
+            cleared_goals = cleared_goals + 1
+            print("Cleared Goals:" + str(cleared_goals))
+            if cleared_goals < len(goals):
+                goal_x = goals[cleared_goals][0]
+                goal_y = goals[cleared_goals][1]
+            else:
+                self.set_goal()
+            #goal_x = self.width - goal_x
+            #goal_y = self.height - goal_y
+
         last_distance = distance
+
 
 # Adding the painting tools
 
@@ -229,6 +334,7 @@ class MyPaintWidget(Widget):
 
 # Adding the API Buttons (clear, save and load)
 
+
 class CarApp(App):
 
     def build(self):
@@ -252,6 +358,60 @@ class CarApp(App):
         global sand
         self.painter.canvas.clear()
         sand = np.zeros((longueur,largeur))
+        # Rectangulo 1
+        for x in range(200, 300):
+            for y in range(200, 600):
+                sand[x, y] = 1
+
+        # Rectangulo 2
+        for x in range(500, 700):
+            for y in range(100, 150):
+                sand[x, y] = 1
+
+        # Rectangulo 3
+        for x in range(1200, 1250):
+            for y in range(800, 1100):
+                sand[x, y] = 1
+
+        # Rectangulo 4
+        for x in range(500, 700):
+            for y in range(500, 700):
+                sand[x, y] = 1
+
+        # Rectangulo 5
+        for x in range(200, 250):
+            for y in range(800, 1100):
+                sand[x, y] = 1
+
+        # Rectangulo 6
+        for x in range(600, 1000):
+            for y in range(800, 900):
+                sand[x, y] = 1
+
+        # Rectangulo 7
+        for x in range(200, 300):
+            for y in range(500, 700):
+                sand[x, y] = 1
+
+        # Rectangulo 8
+        for x in range(900, 1300):
+            for y in range(200, 300):
+                sand[x, y] = 1
+
+        # Rectangulo 9
+        for x in range(1000, 1200):
+            for y in range(500, 600):
+                sand[x, y] = 1
+
+        # Rectangulo 10
+        for x in range(400, 750):
+            for y in range(1100, 1150):
+                sand[x, y] = 1
+
+        # Rectangulo 11
+        for x in range(1500, 1550):
+            for y in range(500, 1000):
+                sand[x, y] = 1
 
     def save(self, obj):
         print("saving brain...")
